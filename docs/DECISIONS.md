@@ -1,5 +1,17 @@
 # Engineering decisions
 
+## D8. Ordered waypoint comparison lifecycle (2026-10-09)
+
+- **Status:** Accepted; implemented through Stage 3 UI. Device acceptance scope
+  is tracked in [Project status](PROJECT_STATUS.md).
+- **Decision:** Up to three ordered route-shaping waypoints; no waiting time or
+  fare behavior. Only explicit submission requests routes. Keep separate outcomes
+  and generations, retain the current conventional route across waypoint edits,
+  and retry only failed/missing branches. See [Architecture](ARCHITECTURE.md).
+- **Consequences:** No automatic recalculation or persistent cache. Reusing the
+  current baseline does not refresh provider data; reset or endpoint editing
+  invalidates it. Waypoints cannot establish road accessibility or a better route.
+
 Recorded 2026-10-01 from current repository code/docs, not reconstructed chat
 history. Accepted entries describe existing direction; pending entries do not
 authorize implementation. Update status and consequences when decisions change.

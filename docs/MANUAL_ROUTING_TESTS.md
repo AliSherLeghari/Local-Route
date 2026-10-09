@@ -1,8 +1,24 @@
 # Manual Karachi routing acceptance
 
-**NOT VERIFIED — MANUAL TEST REQUIRED** for every case below. No live API calls
-or emulator/device checks were performed for this milestone. Automated fake
-responses establish application behavior, not Karachi road quality.
+The owner reports emulator DNS resolved, OSM tiles loading, and both conventional
+and waypoint routes displayed successfully. This does not establish completion
+of the cases below, which remain **NOT VERIFIED — MANUAL TEST REQUIRED** until
+individually recorded. Automated fixtures do not establish Karachi road quality.
+
+## Stage 3 waypoint/device checks
+
+- Add W1/W2/W3 by long-press; confirm Add disables at three and markers/sequence
+  match. Edit, reorder, remove, and verify no requests until explicit submission.
+- Inspect snapping on divided roads and near a missing/inaccessible road. Record
+  unexpected detours or U-turns; waypoints do not guarantee the intended road.
+- Compare both polylines, including shared geometry, metric differences, and
+  combined camera fit. Pan/zoom, edit or expand controls: no unexpected refit.
+- Edit while loading and reset before completion: stale routes must not return.
+  Exercise offline/partial failure and retry without repeatedly consuming quota.
+- Check narrow portrait, landscape, large text, TalkBack labels/touch targets,
+  footer credit links, and sequence visibility. Record findings and device details.
+- Confirm no passenger stopping time/fare behavior is implied. Durations are
+  estimates without live traffic. Use public locations only.
 
 ## Procedure
 

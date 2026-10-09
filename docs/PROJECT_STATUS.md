@@ -1,5 +1,93 @@
 # Project status
 
+## Stage 3 map comparison UI (2026-10-09)
+
+Latest milestone on `feature/local-route-comparison`; earlier sections describe
+historical stage boundaries. All Stage 1/2 work remains uncommitted and preserved.
+
+- MapScreen exposes a collapsible 0/3 waypoint panel, long-press add/edit, ordered
+  move/remove controls, labeled markers and a visible sequence. No automatic
+  submission on edits. Existing gesture flags remain unchanged.
+- Conventional and Via waypoints have distinct polylines, independent metrics,
+  loading/errors, raw-value difference formatting and explicit selective retry.
+  Waypoint changes preserve the baseline and show recalculation guidance.
+- Camera fits combined current geometry after requests settle; selection, edits,
+  reorder, and stale completions do not trigger a refit. Controls wrap/scroll;
+  linked credits remain in a horizontal footer. Marker semantics are distinct.
+- Added 12 widget tests covering controls, limit/order/edit/removal, two results,
+  partial failures/retry, reset/stale completion, camera behavior, differences,
+  narrow/landscape layouts and 2x text.
+- Final verification: Dart format exited 0 on the two Stage 3 Dart files;
+  `flutter analyze` exited 0 with no issues (7.5 seconds); `flutter test` exited 0
+  with all 130 tests passed, including the prior 118; `git diff --check` passed.
+  Tests used controlled futures and local tiles, never live GraphHopper requests.
+  Tests caught marker semantics merging, a narrow large-text footer clipping
+  issue and insufficient landscape map space; all were corrected. Initial lint
+  and test-finder issues were also corrected. One permission-review timeout was
+  retried successfully; no verification remains blocked.
+- User-reported emulator verification: DNS resolved; OSM tiles load; conventional
+  GraphHopper routing works; both conventional and waypoint routes appear.
+  This session made no live provider calls. Detailed manual checklist/TalkBack,
+  snapping/access correctness, and account entitlement remain unverified.
+- No new dependencies, backend, credentials, permissions, commits, or pushes.
+  Stop after verification for user review; no further stage is authorized.
+
+## Stage 2 Cubit/state comparison support (2026-10-09)
+
+Continued on `feature/local-route-comparison`, preserving approved uncommitted
+Stage 1 work. This is the latest milestone; older next-step notes are historical.
+
+- Added immutable ordered waypoint state and add/select/edit/replace/remove/reorder
+  operations using the shared three-waypoint limit. Invalid indices are safe no-ops.
+- Separate conventional/preferred results, loading, errors, and generation counters.
+  Explicit submission requests only missing branches. No requests occur on edits.
+- Waypoint edits preserve valid/in-flight conventional routing. Partial successes
+  survive failures; stale completions after edits/reset/close cannot overwrite state.
+- Raw preferred-minus-conventional distance and duration differences are available
+  only when both current results exist. No fare or waiting-time logic.
+- Existing map screen and Stage 1 service/repository are unchanged in this stage.
+  Waypoint editing/comparison display are not yet available in the UI.
+- Added 39 Cubit/state tests covering 0-3 waypoints, order/limits/invalid indices,
+  immutable lists, raw comparison signs, partial failures, selective retry,
+  request counts, baseline reuse, and stale success/failure after every edit,
+  reset, and closure. Existing tests retained.
+- Final verification: Dart format exited 0 on four Stage 2 Dart files;
+  `flutter analyze` exited 0 with no issues (2.6 seconds); `flutter test` exited
+  0 with all 118 tests passed; `git diff --check` exited 0. The first analysis
+  found a missing brace block and unused test import; both were fixed before
+  the final run. Tests use controlled futures/fake HTTP/local tiles only.
+- No live GraphHopper requests or device verification. No commits or pushes.
+- Next: Stage 3 UI work only after approval; see [Architecture](ARCHITECTURE.md).
+
+## Stage 1 waypoint service/repository support (2026-10-09)
+
+Started clean on `feature/local-route-comparison` after conventional routing was
+merged into local `main` at `75ae6ee`. This section supersedes the older branch
+and uncommitted-baseline description below; historical verification is retained.
+
+- Repository/service accept zero to three ordered intermediate waypoints in one
+  GraphHopper request. The shared limit rejects excess waypoints before HTTP.
+- Supplied order and repeated points are preserved; caller mutations cannot
+  alter the submitted request. Existing two-point routing remains supported.
+- Parser, timeout/abort, response limits, fixed host, and safe errors are retained.
+- Cubit, state, UI, dependencies, and platform configuration are unchanged.
+- Added 11 unit tests for zero/one/two/three ordered waypoints, one-request totals,
+  repeated points, caller-list mutation, forwarding, and pre-HTTP limit rejection.
+- Verification: `flutter analyze` passed with no issues; `flutter test` passed all
+  79 tests, including existing conventional routing, Cubit, and widget tests.
+  `dart format` completed on seven changed Dart files; `git diff --check` passed.
+  Tests used fake HTTP/local tiles only. Analysis/tests required SDK cache access.
+  The sandboxed formatter stalled; SDK-access approval reviews timed out twice.
+  Direct Dart formatting completed but initially failed on a telemetry write;
+  rerunning the same SDK executable with `--suppress-analytics` exited 0 with no
+  further formatting changes.
+- No live API/device tests or account-limit verification in this stage. The owner
+  reports conventional routing was manually verified; the detailed acceptance
+  checklist has not been updated with those results.
+- Stage 2 requires separate approval. No commit or push made.
+
+See [Architecture](ARCHITECTURE.md) and [Security](SECURITY.md) for the boundary.
+
 Updated 2026-10-08. Implementation work began clean on `feature/conventional-routing`, HEAD
 `b728ba935ac477763a943eab85568a005c1ea2e1`. Changes are local and uncommitted.
 

@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../models/route_point.dart';
 import '../models/route_result.dart';
 import '../models/routing_failure.dart';
+import '../models/routing_limits.dart';
 
 /// GraphHopper transport and schema stay entirely inside this boundary.
 class RoutingService {
@@ -22,7 +23,16 @@ class RoutingService {
   static const maxResponseBytes = 2 * 1024 * 1024;
   static const maxGeometryPoints = 25000;
 
-  Future<RouteResult> route(RoutePoint origin, RoutePoint destination) async {
+  Future<RouteResult> route(
+    RoutePoint origin,
+    RoutePoint destination, {
+    List<RoutePoint> waypoints = const [],
+  }) async {
+    if (waypoints.length > maxIntermediateWaypoints) {
+      throw RoutingFailure.tooManyWaypoints;
+    }
+    // Snapshot the caller's order before any asynchronous transport work.
+    final orderedWaypoints = List<RoutePoint>.unmodifiable(waypoints);
     if (_apiKey.isEmpty || _apiKey.startsWith('REPLACE_')) {
       throw RoutingFailure.configuration;
     }
@@ -32,6 +42,8 @@ class RoutingService {
       // GET inputs are latitude,longitude; GeoJSON outputs are longitude,latitude.
       'point': [
         '${origin.latitude},${origin.longitude}',
+        for (final point in orderedWaypoints)
+          '${point.latitude},${point.longitude}',
         '${destination.latitude},${destination.longitude}',
       ],
       'points_encoded': 'false', 'calc_points': 'true',

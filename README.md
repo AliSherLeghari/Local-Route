@@ -1,8 +1,8 @@
 # Local Route
 
-A Flutter learning MVP with a Karachi map and one conventional driving route
-between two selected points. Local-known routes and route comparison remain
-future work. No GPS, search, account, database or backend is included.
+A Flutter learning MVP with a Karachi map and comparison of a conventional driving
+route with a route through up to three ordered waypoints. No GPS, search, account,
+database or backend is included.
 
 ## Run and configure routing
 
@@ -48,6 +48,17 @@ key for public distribution. Rebuild after changing configuration. See
 - Press Get Route. The app sends those two selected coordinates to GraphHopper.
 - A successful result shows road geometry, distance and estimated duration; the
   camera fits the route. Duration is not a live-traffic prediction.
+- Expand Waypoints, choose Add waypoint, then long-press the map. Repeat up to
+  three times. Edit W1/W2/W3 selects a point for replacement by long-press; arrows
+  change the order and the remove control deletes a point. Check the A → W1 → B
+  sequence before pressing Compare routes. Edits never submit requests.
+- Conventional is blue/wide; Via waypoints is orange/narrow. Each shows its own
+  distance, estimated duration, and safe errors. Differences compare provider
+  totals; waypoints are not guaranteed shortcuts and add no passenger stopping time.
+- Waypoint edits retain the conventional route and require explicit recalculation.
+  Retry requests only missing results. Completed unchanged routes are reused.
+  The camera fits both current geometries when requests settle. Credits remain
+  in the footer, which scrolls horizontally on narrow screens or with large text.
 - Reset clears endpoints/results. Errors never create a substitute straight line.
   Retry is explicit; wait a minute after quota/rate-limit errors.
 - Coordinates/results stay in application memory. Providers receive network

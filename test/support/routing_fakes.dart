@@ -44,9 +44,15 @@ class ControlledService extends RoutingService {
       );
   final pending = <Completer<RouteResult>>[];
   final endpoints = <(RoutePoint, RoutePoint)>[];
+  final waypointRequests = <List<RoutePoint>>[];
   @override
-  Future<RouteResult> route(RoutePoint origin, RoutePoint destination) {
+  Future<RouteResult> route(
+    RoutePoint origin,
+    RoutePoint destination, {
+    List<RoutePoint> waypoints = const [],
+  }) {
     endpoints.add((origin, destination));
+    waypointRequests.add(List.unmodifiable(waypoints));
     final request = Completer<RouteResult>();
     pending.add(request);
     return request.future;

@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:local_route/routing/models/route_point.dart';
 import 'package:local_route/routing/models/routing_failure.dart';
+import 'package:local_route/routing/models/routing_limits.dart';
 import 'package:local_route/routing/services/routing_service.dart';
 import 'support/routing_fakes.dart';
 
@@ -47,6 +49,87 @@ void main() {
       expect(route.duration, const Duration(minutes: 8));
     },
   );
+  // Deliberately non-sorted coordinates catch accidental order optimization.
+  final waypoints = [
+    RoutePoint(latitude: 24.89, longitude: 67.04),
+    RoutePoint(latitude: 24.85, longitude: 67.02),
+    RoutePoint(latitude: 24.87, longitude: 67.05),
+  ];
+  final serializedWaypoints = ['24.89,67.04', '24.85,67.02', '24.87,67.05'];
+  for (final count in [0, 1, 2, 3]) {
+    test(
+      '$count waypoints use one ordered car request and total metrics',
+      () async {
+        var requests = 0;
+        final client = MockClient((request) async {
+          requests++;
+          expect(request.url.queryParametersAll['point'], [
+            '24.86,67.01',
+            ...serializedWaypoints.take(count),
+            '24.88,67.03',
+          ]);
+          expect(request.url.queryParameters['profile'], 'car');
+          expect(request.url.queryParameters.containsKey('optimize'), isFalse);
+          expect(request.url.queryParameters.containsKey('algorithm'), isFalse);
+          expect(
+            request.url.queryParameters.containsKey('pass_through'),
+            isFalse,
+          );
+          return http.Response(jsonEncode(providerRoute()), 200);
+        });
+        final result = await service(
+          client,
+        ).route(origin, destination, waypoints: waypoints.take(count).toList());
+        expect(requests, 1);
+        expect(result.geometry, exampleRoute().geometry);
+        expect(result.distanceMeters, 2500);
+        expect(result.duration, const Duration(minutes: 8));
+      },
+    );
+  }
+  test(
+    'repeated waypoints are preserved and caller edits cannot alter request',
+    () async {
+      final selected = [waypoints[0], waypoints[1], waypoints[0]];
+      final received = Completer<http.Request>();
+      final response = Completer<http.Response>();
+      final client = MockClient((request) {
+        received.complete(request);
+        return response.future;
+      });
+      final future = service(
+        client,
+      ).route(origin, destination, waypoints: selected);
+      selected.clear();
+      final request = await received.future;
+      expect(request.url.queryParametersAll['point'], [
+        '24.86,67.01',
+        '24.89,67.04',
+        '24.85,67.02',
+        '24.89,67.04',
+        '24.88,67.03',
+      ]);
+      response.complete(http.Response(jsonEncode(providerRoute()), 200));
+      expect((await future).distanceMeters, 2500);
+    },
+  );
+  test('more than three waypoints fail safely before HTTP', () async {
+    expect(maxIntermediateWaypoints, 3);
+    var requests = 0;
+    final client = MockClient((_) async {
+      requests++;
+      return http.Response(jsonEncode(providerRoute()), 200);
+    });
+    await expectLater(
+      service(client).route(
+        origin,
+        destination,
+        waypoints: List.filled(maxIntermediateWaypoints + 1, waypoints.first),
+      ),
+      throwsA(RoutingFailure.tooManyWaypoints),
+    );
+    expect(requests, 0);
+  });
   for (final status in [401, 403, 429, 500, 503, 302, 404]) {
     test('maps HTTP $status without exposing response', () async {
       final expected = status == 401 || status == 403

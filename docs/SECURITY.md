@@ -29,6 +29,10 @@ or commercial distribution/shared paid keys require a fresh architecture review.
 - Get Route explicitly sends the two selected coordinates and key over HTTPS to
   fixed `graphhopper.com/api/1/route`. Redirects are disabled so a redirect cannot
   forward the key to another host. No TLS/certificate bypass exists.
+- Stage 1 (2026-10-09): repository/service callers can additionally supply up to
+  three ordered intermediate coordinates, sent in the same HTTPS request. Excess
+  waypoints fail before HTTP. Stage 3 now exposes this through Compare routes.
+  Waypoints remain in memory and add no logging, retention, or permissions.
 - The service requests car geometry, no instructions/elevation. It validates JSON,
   schema, finite coordinate ranges, geometry type/count and non-negative metrics.
   Limits: 2 MiB response, 25,000 points, 100,000,000 meters, 365 days duration.
@@ -40,6 +44,13 @@ or commercial distribution/shared paid keys require a fresh architecture review.
   precise coordinates nor credentials nor provider responses.
 - Endpoint changes/reset invalidate pending results. They do not undo coordinate
   disclosure or necessarily cancel earlier server computation.
+- Stage 2: explicit Cubit submission may send two independent requests (A/B and
+  A/ordered waypoints/B). Waypoint edits send nothing and invalidate only the
+  preferred request's generation. Valid conventional results remain in memory
+  for reuse until endpoint changes/reset; no persistent route history is added.
+  Each branch sanitizes unexpected failures independently. Stage 3 UI explains
+  selected-coordinate disclosure and that waypoints add no passenger stopping
+  time. Controls delegate to Cubit; no new permissions or storage are added.
 - Route points/results remain in memory; no history, analytics or persistence.
   The provider still receives connection metadata and may keep server logs under
   its own [privacy policy](https://www.graphhopper.com/privacy/). Do not confuse

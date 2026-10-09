@@ -1,17 +1,17 @@
 # Future roadmap
 
-## Next: validate conventional routing
+## Next: complete route-comparison acceptance
 
-Configure the owner-supplied GraphHopper development key locally and execute the
-six public Karachi acceptance cases. Validate snapping, road geometry and duration
-plausibility on a device. Fix observed baseline issues before expanding features.
-Provider/account entitlement and live route quality remain unverified.
+The owner reports tiles and both conventional/waypoint routes working on the
+emulator after resolving DNS. Complete the six public Karachi cases and the
+waypoint checks in [Manual tests](MANUAL_ROUTING_TESTS.md). Validate snapping,
+road geometry and duration plausibility; account entitlement remains unverified.
 
 ## Remaining V1
 
-After acceptance, add local waypoint routes and comparison through the existing
-service/repository/Cubit boundaries. Use the same travel profile and make estimated
-duration limitations clear. Presentation redesign should remain independent.
+Ordered waypoint routes and comparison are implemented through all existing
+layers. Remaining work is detailed device acceptance and a public-location trial.
+Presentation redesign should remain independent.
 
 ## Possible V2 (not current requirements)
 

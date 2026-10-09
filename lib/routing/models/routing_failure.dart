@@ -1,6 +1,7 @@
 enum RoutingFailure implements Exception {
   missingEndpoints('Select an origin and destination first.'),
   invalidCoordinate('Choose a valid position on the map.'),
+  tooManyWaypoints('Choose no more than three intermediate waypoints.'),
   noRoute('No driving route found. Try points nearer public roads.'),
   timeout('The route took too long. Try again.'),
   network('Unable to connect. Check your internet and try again.'),

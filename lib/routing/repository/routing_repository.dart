@@ -11,6 +11,9 @@ class RoutingRepository {
 
   final RoutingService service;
 
-  Future<RouteResult> route(RoutePoint origin, RoutePoint destination) =>
-      service.route(origin, destination);
+  Future<RouteResult> route(
+    RoutePoint origin,
+    RoutePoint destination, {
+    List<RoutePoint> waypoints = const [],
+  }) => service.route(origin, destination, waypoints: waypoints);
 }

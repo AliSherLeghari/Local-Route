@@ -8,14 +8,16 @@
 - Returned road polyline, distance and estimated duration; route camera fit.
 - Loading, safe error/retry, duplicate and stale-response protection.
 - Provider-neutral models, deterministic tests and local configuration instructions.
+- Up to three ordered route-shaping waypoints, explicit route comparison,
+  independent outcomes, and conventional-route reuse after waypoint edits.
 
-Live provider/account setup and Karachi acceptance remain unverified; see
+The owner reports both route types working on the emulator; detailed Karachi
+acceptance and account limits remain to be recorded/verified; see
 [Project status](PROJECT_STATUS.md) and [manual cases](MANUAL_ROUTING_TESTS.md).
 
 ## Remaining in V1
 
-After conventional routing passes manual acceptance: alternative/local road route
-through intermediate waypoints, route comparison and a public-location trial.
+Complete the detailed waypoint/device acceptance checklist and a public-location trial.
 Waypoints alone never establish that a route is accessible or better. Never
 present straight-line connections as road routes.
 
