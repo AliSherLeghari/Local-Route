@@ -1,25 +1,23 @@
 # Future roadmap
 
-## Next: Phase 2 within V1
+## Next: validate conventional routing
 
-Add pickup/destination input and small geographic/route models. Choose a road
-routing provider after reviewing coverage, waypoint/alternative support, travel
-profiles, terms, limits, and credential requirements. Implement calls in
-RoutingService, expose operations through RoutingRepository, and let RoutingCubit
-coordinate loading/results/errors. UI then renders actual road geometry,
-waypoints, distance, estimated duration, and comparisons.
+Configure the owner-supplied GraphHopper development key locally and execute the
+six public Karachi acceptance cases. Validate snapping, road geometry and duration
+plausibility on a device. Fix observed baseline issues before expanding features.
+Provider/account entitlement and live route quality remain unverified.
 
-Validate on a real trip where the user knows a local route. Compare under the
-same travel profile; explain engine limitations and that duration is an estimate.
-Keep redesigns of presentation independent from these routing operations.
+## Remaining V1
 
-## Possible V2 — not current requirements
+After acceptance, add local waypoint routes and comparison through the existing
+service/repository/Cubit boundaries. Use the same travel profile and make estimated
+duration limitations clear. Presentation redesign should remain independent.
 
-If the MVP proves useful, consider a backend API, users/authentication, persistent
-community routes in PostgreSQL/PostGIS, route submissions and validation,
-votes/reports, confidence measures, caching, and cloud deployment.
+## Possible V2 (not current requirements)
 
-The service can move from a third-party routing API to our backend while the
-repository continues exposing routing operations. Add infrastructure only when
-real requirements justify it. None of these V2 features should be implemented
-as part of the current MVP.
+Consider backend, accounts, community persistence, PostgreSQL/PostGIS, submissions,
+validation/votes, confidence measures and infrastructure only if actual needs
+justify them. A secret provider credential or shared paid-key abuse risk requires
+an explicit architecture decision before distribution. No such infrastructure is
+implemented. OSRM remains a possible engine behind a provisioned host; do not
+substitute a public demo endpoint for production infrastructure.

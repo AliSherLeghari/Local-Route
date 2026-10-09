@@ -7,7 +7,7 @@ authorize implementation. Update status and consequences when decisions change.
 ## D1. Separate presentation from routing responsibilities
 
 - **Status:** Accepted; documented in [Architecture](ARCHITECTURE.md).
-- **Context:** Map interaction is implemented; routing business logic is not.
+- **Context:** Map interaction and conventional GraphHopper routing are implemented.
 - **Decision:** Widgets capture input/render state. Keep routing algorithms,
   provider-response parsing, and persistence out of widgets.
 - **Reason:** Presentation redesigns should not require rewriting routing logic.
@@ -17,7 +17,7 @@ authorize implementation. Update status and consequences when decisions change.
 ## D2. Use flutter_bloc Cubit
 
 - **Status:** Accepted; implemented in [app.dart](../lib/app.dart) and RoutingCubit.
-- **Context:** Current state is a single controller-readiness flag.
+- **Context:** State now includes controller readiness, endpoints and route lifecycle.
 - **Decision:** Use Cubit and explicit states, with BlocProvider managing lifetime.
 - **Reason:** [Architecture](ARCHITECTURE.md) calls for small, explicit state
   management without event-based Bloc boilerplate or Riverpod.
@@ -26,26 +26,24 @@ authorize implementation. Update status and consequences when decisions change.
 
 ## D3. Retain repository and service routing boundaries
 
-- **Status:** Accepted scaffolding; no routing workflow exists yet.
-- **Context:** The provider is undecided; both classes currently have constructors
-  only, with references wired through the Cubit.
-- **Decision:** Preserve UI → Cubit → Repository → Service. Service will translate
+- **Status:** Accepted and exercised by the conventional-routing implementation.
+- **Context:** GraphHopper calls traverse the Cubit, repository and service.
+- **Decision:** Preserve UI → Cubit → Repository → Service. Service translates
   provider responses/errors; repository exposes application-facing operations.
 - **Reason:** [Architecture](ARCHITECTURE.md) allows a future provider/backend
   change without making UI/Cubit depend on transport details.
-- **Consequences / revisit:** Add actual methods with routing, not fake results
-  merely to exercise scaffolding. Keep map/transport types out of higher layers
-  where practical.
+- **Consequences / revisit:** Keep the route operation provider-neutral and keep
+  map/transport types out of higher layers.
 
 ## D4. Keep MVP architecture simple
 
 - **Status:** Accepted; [Architecture](ARCHITECTURE.md) and [MVP scope](MVP_SCOPE.md).
-- **Context:** Only the map foundation is implemented.
+- **Context:** Map foundation and conventional-routing flow are implemented.
 - **Decision:** Concrete classes and constructor injection; no unnecessary DI
   framework, use-case layer, speculative interfaces, duplicate models, or microservices.
-- **Reason:** The documented phase needs no additional domain/core/widget structure.
-- **Consequences / revisit:** Introduce small geographic/route models when real
-  routing requires them; add abstractions only for demonstrated needs.
+- **Reason:** Small models and concrete boundaries are sufficient for this phase.
+- **Consequences / revisit:** Keep the existing small geographic/route models;
+  add abstractions only for demonstrated needs.
 
 ## D5. Defer backend, database, and authentication
 
@@ -73,15 +71,23 @@ authorize implementation. Update status and consequences when decisions change.
 
 ## D7. Conventional routing provider
 
-- **Status:** OPEN / PENDING; no provider selected or integrated.
-- **Context:** The next milestone needs a real road route; service is still empty.
-- **Decision:** Pending evaluation; this document selects no provider.
-- **Reason:** Coverage, capabilities, credentials, and operational constraints
-  must fit the actual MVP before implementation.
-- **Evaluation criteria:** Karachi/Pakistan road coverage and route quality;
-  travel profiles; waypoint support; alternative-route support; credential model
-  and whether credentials may safely be distributed in a client; usage limits
-  and quotas; terms/licensing; ETA/duration semantics; cost; reliability.
-- **Consequences / revisit:** Record evidence, chosen profile, limitations, and
-  client/server boundary when resolved. Do not imply traffic-aware ETA or safe
-  road access without evidence. Private credentials require revisiting D5.
+- **Status:** Accepted 2026-10-01 for controlled personal, non-commercial MVP use;
+  implementation tested with fakes; live account and Karachi quality unverified.
+- **Decision:** GraphHopper managed Directions API, OSM `car` profile, direct HTTPS
+  client. Preserve flutter_map/OSM presentation. No backend or vendor SDK.
+- **Credential classification:** 2, client credential for owner-supplied personal
+  development use. The provider's official OSMAnd Android/iOS guide documents this
+  usage. This is not a claim of secret storage or approval to widely distribute a
+  shared paid key. Compile-time config is ignored locally but extractable in builds.
+- **Reason:** Existing map compatibility, explicit client/mobile support, temporary
+  result handling and replaceable service boundary. See the focused
+  [provider comparison and official evidence](ROUTING_PROVIDER.md).
+- **Limitations:** Free allowance and account quotas apply; no live traffic or
+  guarantee of route legality/quality. Keep OSM and GraphHopper attribution visible.
+  Only in-memory route results; no bulk collection. Use Free only non-commercially.
+- **Alternatives:** Mapbox excluded for the previously identified terms blocker.
+  HERE not selected due to coverage/plan uncertainty. OSRM is a possible future
+  engine with an explicitly provisioned host, not an implicit public-demo dependency.
+- **Revisit triggers:** Public distribution, paid/shared credentials, commercial
+  use, quota abuse, terms changes, poor Karachi results or required server secrets.
+  A private credential would require reconsidering D5, not embedding it in Flutter.

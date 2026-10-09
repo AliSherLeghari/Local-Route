@@ -1,68 +1,70 @@
 # Security and privacy
 
-## A. Verified current posture
+## Implemented boundary (2026-10-01)
 
-Source/configuration review: 2026-10-01, application baseline
-`d322db58307d7087406e1a5878efd9e006c54578`. Recheck these facts as code changes.
+GraphHopper's OSM car routing is called directly from RoutingService. Its
+owner-supplied API key is classified as a client credential for controlled personal
+non-commercial builds, based on the provider's documented mobile integration.
+See [decision and evidence](ROUTING_PROVIDER.md). No private/server-only key,
+backend, account system, GPS or database is introduced.
 
-- No obvious embedded credentials, passwords, tokens, or private keys were
-  identified in the inspected source/configuration. No tracked keystores were
-  identified. Android ignore rules exclude key.properties and keystores;
-  ignore rules are not a substitute for reviewing changes for secrets.
-- Android release builds currently use debug signing in
-  [app/build.gradle.kts](../android/app/build.gradle.kts). This development setup
-  must be replaced before production distribution.
-- [MapScreen](../lib/routing/presentation/screens/map_screen.dart) uses HTTPS
-  for OSM tiles and the fixed attribution link. No TLS/certificate bypass was
-  found. XML namespace/doctype HTTP strings are not application network calls.
-- Android source manifests declare INTERNET, with no location or other sensitive
-  feature permissions. The iOS Info.plist has no location usage description or
-  broad transport-security exception. There is no GPS functionality; Karachi is
-  a fixed map starting position.
-- No authentication, application database, or backend integration exists.
-  No precise-location application logging was found.
-- flutter_map handles tile downloads and default tile caching. Native tile
-  caching/browser caching means this is not an application with no local storage
-  whatsoever. No application route-history or credential storage is implemented.
-- Tile requests are an external data flow: the tile host receives requested map
-  areas and connection metadata. Requested areas are not proof of GPS location.
-  Opening attribution also contacts an external website.
+Configuration is `GRAPHHOPPER_API_KEY` via compile-time Dart defines. Store the
+development JSON outside the repository as recommended in [setup](../README.md);
+keep `config/routing.example.json` as a placeholder template. The ignored
+`config/routing.local.json` remains supported for backward compatibility. No runtime
+credential file is bundled as an asset. This reduces routine source disclosure,
+not extraction from compiled code. Build outputs and .dart_tool may contain the
+value and remain ignored. Never upload them as public artifacts with your key.
+Never use a bundled .env as secret storage. Do not paste credentials into chat,
+logs, screenshots or issue reports. Do not force-add the ignored config.
 
-Review limitations: this was a source/configuration inspection, not a penetration
-test, exhaustive Git-history secret scan, compiled-artifact/merged-permission
-audit, device privacy test, or dependency advisory assessment. No obvious finding
-does not establish absence of vulnerabilities. In particular, this review does
-not establish that dependencies are vulnerability-free. See
-[Project status](PROJECT_STATUS.md) for automated checks and runtime limitations.
+The key authenticates billable/quota-bearing requests; exposure can consume the
+account allowance. Use a dedicated development key, inspect/revoke it through the
+provider dashboard if exposed, and confirm the current Free entitlement/quotas.
+There is no claim of an enforceable client-side spending or abuse boundary. Public
+or commercial distribution/shared paid keys require a fresh architecture review.
 
-## B. Future / production requirements
+## Data flow and transport
 
-The following are requirements for future features or distribution, not claims
-that these controls are currently implemented:
+- Get Route explicitly sends the two selected coordinates and key over HTTPS to
+  fixed `graphhopper.com/api/1/route`. Redirects are disabled so a redirect cannot
+  forward the key to another host. No TLS/certificate bypass exists.
+- The service requests car geometry, no instructions/elevation. It validates JSON,
+  schema, finite coordinate ranges, geometry type/count and non-negative metrics.
+  Limits: 2 MiB response, 25,000 points, 100,000,000 meters, 365 days duration.
+  These are defensive ceilings, not promised route capabilities.
+- A 15-second overall timeout covers headers and body; transport is aborted on
+  exit. No automatic retries. HTTP auth/configuration, quota, availability,
+  malformed responses, known no-route errors and connection failures become safe
+  fixed messages. Raw errors/bodies/URLs never reach UI. App code logs neither
+  precise coordinates nor credentials nor provider responses.
+- Endpoint changes/reset invalidate pending results. They do not undo coordinate
+  disclosure or necessarily cancel earlier server computation.
+- Route points/results remain in memory; no history, analytics or persistence.
+  The provider still receives connection metadata and may keep server logs under
+  its own [privacy policy](https://www.graphhopper.com/privacy/). Do not confuse
+  app retention with provider retention.
+- OSM tile requests separately disclose viewed map areas and connection metadata.
+  flutter_map/browser caching remains enabled. Credit links contact external sites.
 
-- **Credentials and trust boundary:** private provider credentials belong behind
-  a server boundary, never in Flutter assets, source, or a bundled .env. Only use
-  direct client integration when the credential model and terms permit it.
-  Treat client requests as untrusted; a proxy alone does not prevent abuse.
-- **Geographic input and responses:** validate finite coordinate values, ranges,
-  coordinate order, supported profiles, waypoint counts, geometry, units, and
-  response structure. Bound request/response sizes and execution time; handle
-  malformed data, no-route results, and failures without unsafe assumptions.
-- **Privacy and logging:** minimize coordinate collection and disclosure. Redact
-  coordinates, credentials, and identifiers from routine logs. If location or
-  route history is persisted, define purpose, access, retention, and deletion.
-  Add location permissions only for an implemented feature and with least privilege.
-- **Transport:** retain HTTPS and certificate validation across new integrations.
-- **Shared services:** if accounts are introduced, enforce authentication and
-  server-side authorization. Add rate limits, quotas, budget controls, and abuse
-  protection when backend APIs are justified.
-- **Protected intelligence and partners:** keep proprietary routing logic/data
-  server-side when confidentiality is required. Partner APIs need appropriate
-  credential isolation, access controls, contractual review, and data minimization.
-- **Release and supply chain:** use controlled production signing and protect
-  signing keys. Review dependency advisories, sources, lockfile changes, platform
-  permissions, and release artifacts. Review tile/routing terms, licensing,
-  attribution, capacity, and privacy before wider use.
+## Platform and review limits
 
-Backend adoption is conditional on real requirements; see
-[Decisions](DECISIONS.md) and [MVP scope](MVP_SCOPE.md).
+Android keeps its existing INTERNET permission only; iOS has no GPS usage
+strings or broad transport-security exception. No permission changes were needed.
+Android release still uses debug signing and example application identifiers;
+replace those before production distribution. No production readiness is claimed.
+
+Changed source/configuration was reviewed for credential values and unexpected
+files. Tests use fake keys and local tiles. This is not a penetration test,
+exhaustive Git-history scan, dependency advisory audit or compiled-artifact review.
+The ignore rule is only a guardrail, not proof that secrets can never enter Git.
+Before any commit, review all changes and confirm local config/build files remain
+ignored. See [Project status](PROJECT_STATUS.md) for executed checks.
+
+## Revisit before expansion
+
+Private credentials belong behind a justified server boundary; never put them in
+Flutter. Add permission, identity, database, budget controls or location retention
+only with a real authorized feature. Recheck provider terms, public tile capacity,
+credential limits, signing and data accuracy before wider distribution. Backend
+adoption remains conditional; see [D5/D7](DECISIONS.md).

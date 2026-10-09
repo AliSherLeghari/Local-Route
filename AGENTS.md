@@ -15,8 +15,9 @@ Resolve documentation/code discrepancies explicitly rather than silently assumin
 ## Architecture and scope
 
 Preserve the intended routing direction: UI → Cubit → Repository → Service.
-Currently this is routing scaffolding: no real routing request traverses all
-layers. Map tiles are handled separately by flutter_map.
+Conventional GraphHopper routing is implemented through all four layers;
+live provider/device acceptance remains unverified. Map tiles are handled
+separately by flutter_map.
 
 - Keep routing algorithms and provider-response parsing out of widgets.
 - Keep provider-specific transport, parsing, and errors behind the service boundary.

@@ -1,29 +1,26 @@
 # MVP scope
 
-## Implemented in Phase 1
+## Implemented
 
-- OpenStreetMap-based interactive map, pan and zoom.
-- Minimal UI with permanent linked attribution and zoom buttons.
-- flutter_bloc/Cubit readiness state and explicit repository/service boundaries.
-- Documentation and deterministic tests.
+- Karachi OSM interactive map with pan/zoom and linked attribution.
+- Long-press origin/destination selection, endpoint editing and reset.
+- Explicit conventional car route through Cubit → Repository → Service → GraphHopper.
+- Returned road polyline, distance and estimated duration; route camera fit.
+- Loading, safe error/retry, duplicate and stale-response protection.
+- Provider-neutral models, deterministic tests and local configuration instructions.
 
-## Remaining in V1 (later phases)
+Live provider/account setup and Karachi acceptance remain unverified; see
+[Project status](PROJECT_STATUS.md) and [manual cases](MANUAL_ROUTING_TESTS.md).
 
-- Pickup and destination selection.
-- Standard road route.
-- Alternative/local road route through one or more intermediate waypoints.
-- Route comparison including distance and estimated duration.
-- A real pickup/destination trial using a locally known route.
+## Remaining in V1
 
-Routes must follow the actual road network, never be presented as straight-line
-connections. Waypoints express preferred intermediate places; they do not by
-themselves prove a road is accessible or the route is better.
+After conventional routing passes manual acceptance: alternative/local road route
+through intermediate waypoints, route comparison and a public-location trial.
+Waypoints alone never establish that a route is accessible or better. Never
+present straight-line connections as road routes.
 
-## Excluded from V1
+## Excluded
 
-Backend/FastAPI, database/PostgreSQL/PostGIS, authentication/accounts, community
-features, voting/reports, cloud infrastructure, Docker, microservices, Redis,
-Kubernetes, analytics, and enterprise architecture.
-
-Phase 1 deliberately includes none of the pickup, destination, route API,
-polyline, waypoint, or comparison functionality above.
+Backend/FastAPI, database/PostgreSQL/PostGIS, auth/accounts, community/voting,
+cloud infrastructure, Docker, microservices, Redis, Kubernetes, analytics, GPS,
+background location/history, geocoding and turn-by-turn navigation.

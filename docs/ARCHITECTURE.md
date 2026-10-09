@@ -1,43 +1,55 @@
 # Architecture
 
-## Phase 1
+## Conventional routing MVP
 
-`main.dart` starts `LocalRouteApp`. `app.dart` composes dependencies explicitly:
+`main.dart` starts `LocalRouteApp`. The app composes a single HTTP client,
+RoutingService, RoutingRepository and RoutingCubit with constructors:
 
-Presentation → RoutingCubit → RoutingRepository → RoutingService → future provider
+UI → RoutingCubit → RoutingRepository → RoutingService → GraphHopper
 
-- **Presentation:** `MapScreen` renders tiles, instructions, controls, and attribution.
-  Its map controller and camera gestures are presentation details. flutter_map
-  owns tile fetching/caching; there is no handwritten HTTP or routing logic here.
-- **Cubit/state:** `RoutingCubit` records only whether the map controller is ready.
-  This enables zoom buttons. It does not report tile download success. Cubit is
-  small and explicit, without event-based Bloc boilerplate or Riverpod.
-- **Repository:** a concrete, wired boundary for routing operations. Retain it
-  even while small so application workflow does not depend on provider details.
-- **Service:** a concrete boundary reserved for provider/API work. No provider or
-  routing methods exist yet. Repository/service constructors are intentionally the
-  only scaffolding: do not invent fake route results to exercise these layers.
+`LocalRouteApp` reads `GRAPHHOPPER_API_KEY` with a const `String.fromEnvironment`
+and injects it into RoutingService. Flutter's `--dart-define-from-file` supplies
+the compile-time value; there is no runtime JSON or .env loader. The recommended
+development file lives outside the repository; see [setup](../README.md) and
+[credential limitations](SECURITY.md). The existing ignored repository-local file
+remains compatible. Automated tests exercise the route path with fakes; live
+provider/device acceptance remains pending.
 
-The repository is injected into Cubit but not called in Phase 1 because no routing
-operations are in scope. Add actual methods to both boundaries in Phase 2.
-No domain models, core helpers, or extra widget folders are needed yet.
-BlocProvider creates and closes Cubit; MapScreen owns/disposes its MapController.
+- **UI:** MapScreen owns/disposes MapController, keeps OSM raster tiles, pan/zoom,
+  and linked credits. Long-press selects the active endpoint; A/B controls choose
+  which endpoint to edit. Get Route is explicit. Returned geometry alone is drawn
+  as a polyline; success fits the camera and displays km/estimated minutes.
+- **Cubit:** owns selection, endpoints, readiness, loading, result and safe error.
+  Endpoint changes/reset invalidate route/error/loading and advance a generation
+  counter. Only the current generation may publish success or failure. Duplicate
+  submissions while loading are ignored. A changed endpoint allows a new request;
+  obsolete requests may finish but cannot overwrite the current state. Closing
+  the Cubit also invalidates outstanding results. Retry is user initiated.
+- **Repository:** forwards a provider-neutral route operation and typed failures.
+  It does not parse JSON or expose HTTP.
+- **Service:** fixed HTTPS GraphHopper host, car request with two points, bounded
+  response, timeout/abort, response validation and safe failure translation.
+  GET input order is latitude,longitude; returned GeoJSON is longitude,latitude.
+  Provider duration is milliseconds and becomes Dart Duration here.
+- **Models:** RoutePoint validates finite bounds; RouteResult copies geometry into
+  an immutable list, stores meters and Duration. RoutingFailure contains only
+  fixed safe messages. No Flutter map or HTTP types escape into these models.
 
-## Rules to preserve
+App state owns and closes the HTTP client it creates. Tests may inject a repository
+(the caller then owns its dependencies). BlocProvider owns the Cubit. The service
+aborts its transport on timeout/completion; endpoint changes use stale-result
+protection, not transport cancellation. There are no automatic network retries.
 
-1. UI captures input, calls Cubit, and displays state. Keep API requests, route
-   comparison algorithms, persistence, and routing business logic out of widgets.
-2. Cubit coordinates routing through the repository; the repository uses the
-   service. Keep map-package types in presentation where practical; introduce
-   small geographic/route models when routing needs them.
-3. Service translates provider responses/errors. It can later call our backend;
-   preserve the repository's application-facing operations so the UI/Cubit need
-   minimal changes. No backend is required now.
-4. A Figma redesign should replace presentation without rewriting routing logic.
-5. Use concrete classes and constructor injection. No DI framework, use-case
-   layer, speculative interfaces, or duplicate DTO/entity models.
-6. Keep OSM attribution visible and respect tile caching/usage requirements.
+Tile requests/caching remain separately owned by flutter_map. No route cache,
+GPS, geocoder, database, account, backend, or navigation engine is added. Map
+readiness means controller attachment, not that network tiles loaded.
 
-Map images are not road-network route data. The routing provider remains a
-separate decision for Phase 2; no engine, travel profile, or ETA assumptions have
-been chosen yet.
+## Boundaries to preserve
+
+Keep business logic and provider parsing out of widgets. Preserve the repository
+operation when replacing the provider or introducing a justified backend. Use
+small concrete classes, not duplicate domain/DTO hierarchies or DI frameworks.
+Provider alternatives and local-route intelligence remain future work.
+
+See [provider decision](DECISIONS.md), [security](SECURITY.md), and
+[manual validation](MANUAL_ROUTING_TESTS.md).
