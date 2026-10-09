@@ -1,78 +1,94 @@
 # Local Route
 
-A Flutter learning/MVP project for comparing conventional road routes with routes
-known by local residents. **Phase 1 implements the map foundation only.**
+A Flutter learning MVP with a Karachi map and one conventional driving route
+between two selected points. Local-known routes and route comparison remain
+future work. No GPS, search, account, database or backend is included.
 
-## Run
+## Run and configure routing
 
-Use the existing Flutter SDK (Dart ^3.10.4) and an Android emulator with internet:
+Use the installed Flutter SDK (Dart ^3.10.4) and an Android emulator with internet.
+The map works without a routing key; Get Route then shows a setup error.
 
-```sh
+1. Create your own development key in the
+   [GraphHopper dashboard](https://graphhopper.com/dashboard/). Use a non-commercial
+   Free account for this personal learning build; confirm current quotas there.
+2. Use `config/routing.example.json` as the placeholder template. Keep your real
+   development configuration outside the repository, for example at
+   `$env:USERPROFILE\LocalRouteSecrets\graphhopper.json` on Windows. Create that
+   directory and your private copy yourself, then replace the placeholder locally.
+   Never paste your key into chat, source, screenshots, logs or documentation.
+3. Run from the repository root in PowerShell:
+
+```powershell
 flutter pub get
-flutter run
+flutter run --dart-define-from-file="$env:USERPROFILE\LocalRouteSecrets\graphhopper.json"
 ```
 
-The map opens over Karachi at zoom 12. Drag to pan, pinch or double-tap to zoom,
-or use the + / - buttons (zoom range 3–19). This is a fixed starting view, not
-GPS tracking. No account, API key, location permission, or paid service is needed.
+`$env:USERPROFILE` is PowerShell's user-profile environment variable; `$env` alone
+does not identify that directory. The JSON property must remain
+`GRAPHHOPPER_API_KEY`. Flutter supplies it at compile time; the file is not a
+runtime asset. Keep the repository template free of real credentials.
 
-## Packages and map source
+For backward compatibility, `config/routing.local.json` remains ignored and the
+existing `--dart-define-from-file=config/routing.local.json` command still works.
+If using that location, confirm it with `git check-ignore config/routing.local.json`
+before staging files. The outside-repository location is recommended.
 
-- `flutter_bloc` ^9.1.1: Cubit state and its widget integration.
-- `flutter_map` ^8.3.2: maintained, Flutter-based interactive raster map.
-- `latlong2` ^0.10.1: coordinates consumed by the map.
-- `url_launcher` ^6.3.2: opens the map attribution/licence page.
+Dart defines keep configuration out of committed source, **not secret in the
+compiled app**. Use only your owner-supplied GraphHopper client key. Do not put a
+private credential here, share key-bearing builds, or use an unrestricted paid
+key for public distribution. Rebuild after changing configuration. See
+[Security](docs/SECURITY.md) and [provider evidence](docs/ROUTING_PROVIDER.md).
 
-The map requests HTTPS tiles from `https://tile.openstreetmap.org/{z}/{x}/{y}.png`.
-Visible, tappable © OpenStreetMap contributors attribution stays below the map.
-The Android application ID `com.example.local_route` identifies native tile
-requests; keep the tile user agent aligned if the application ID changes.
-Android's main manifest declares INTERNET so release builds can also load tiles.
-No other Android build settings were changed.
+## Use
 
-V1 keeps OpenStreetMap standard raster tiles. Labels may use local/native names
-because they are rendered into the tile images; the app cannot change their
-language. This is a presentation limitation only and does not affect routing
-functionality (routing itself is planned for later phases). A future production
-or UI-polish version may switch to a configurable map style/provider if English
-or multilingual label control is required. V1 needs no additional provider,
-account, API key, or language configuration.
+- Map starts over Karachi at zoom 12. Drag/pinch/double-tap or use + / − (3–19).
+- Long-press to set origin A, then long-press to set destination B.
+- Choose A Origin or B Destination to edit that endpoint; long-press its new spot.
+- Press Get Route. The app sends those two selected coordinates to GraphHopper.
+- A successful result shows road geometry, distance and estimated duration; the
+  camera fits the route. Duration is not a live-traffic prediction.
+- Reset clears endpoints/results. Errors never create a substitute straight line.
+  Retry is explicit; wait a minute after quota/rate-limit errors.
+- Coordinates/results stay in application memory. Providers receive network
+  requests; do not assume they have the same retention policy as the app.
 
-flutter_map's default native cache honours HTTP cache headers; web uses browser
-caching. This cache is disposable and does not promise offline mapping. Do not
-add bulk downloads, offline prefetching, or disable caching for public OSM tiles.
-The public service has limited capacity and no availability guarantee. Review
-its policy before wider distribution and choose a suitable tile host as needed.
-Tile hosting and road routing are separate services: this phase makes no road
-routing requests and cannot calculate routes.
+## Map and packages
 
-Sources checked for package selection:
-- [flutter_map package](https://pub.dev/packages/flutter_map)
-- [Built-in tile caching](https://docs.fleaflet.dev/layers/tile-layer/caching)
-- [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/)
+flutter_bloc handles state; flutter_map renders OSM raster tiles; latlong2 is used
+only at the map boundary; url_launcher opens fixed credit links; package:http is
+an explicit dependency for routing. No provider SDK is added.
+
+Tiles: `https://tile.openstreetmap.org/{z}/{x}/{y}.png`. Native user agent identity
+is `com.example.local_route`; align it when changing the application ID. Existing
+Android INTERNET permission is sufficient. No GPS permission is requested.
+
+Preserve [OSM attribution](https://www.openstreetmap.org/copyright) and linked
+GraphHopper credit. Raster labels are baked into tiles and can use local/native
+names. flutter_map's native cache honors HTTP headers; browsers handle web caching.
+Do not bulk download or prefetch public tiles. Public tile availability is not
+guaranteed; review the [tile policy](https://operations.osmfoundation.org/policies/tiles/)
+before wider use. Tile hosting is separate from GraphHopper road routing.
 
 ## Verify
 
 ```sh
-flutter pub get
 flutter analyze
 flutter test
 ```
 
-Tests use in-memory tiles, never the public tile server. They check map/UI startup,
-attribution, zoom buttons, dragging, and the Cubit's readiness transition. They
-cannot prove real network tiles load on an emulator.
+Automated tests use local tiles and fake HTTP/controlled futures, never live routing
+or a real credential. They cover models, service validation/errors/limits, repository
+propagation, Cubit transitions/stale results, and widget interaction. See
+[Project status](docs/PROJECT_STATUS.md) for checks actually executed.
 
-Manual Android checklist after `flutter run`:
-- App launches without a crash; title is Local Route.
-- Karachi map tiles load and streets/labels are visible.
-- Dragging pans and loads the newly visible area.
-- Pinch, double-tap, and + / - controls zoom correctly.
-- Controls and attribution are readable, including after device rotation.
-- Tapping attribution opens the OSM copyright page.
-- With internet unavailable, the app remains usable but uncached areas may be blank.
+Follow the six public-landmark cases and record template in
+[Manual routing tests](docs/MANUAL_ROUTING_TESTS.md). Live Karachi routing and device
+behavior are not verified by unit/widget tests.
 
-## Continue development
+Also check on the emulator: real tile loading, pinch/double-tap, both credit links,
+portrait/landscape and large text, route camera fit, offline errors, endpoint edits
+while a request is loading, and reset. Do not use personal/private locations.
 
 Read [Architecture](docs/ARCHITECTURE.md), [MVP scope](docs/MVP_SCOPE.md), and
-[Future roadmap](docs/FUTURE_ROADMAP.md) before implementing Phase 2.
+[Future roadmap](docs/FUTURE_ROADMAP.md) before expanding functionality.
